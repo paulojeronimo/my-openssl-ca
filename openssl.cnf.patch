@@ -1,0 +1,20 @@
+--- /usr/lib/ssl/openssl.cnf	2017-12-07 21:08:08.000000000 +0000
++++ openssl.cnf	2018-04-21 23:56:11.403287352 +0000
+@@ -39,7 +39,7 @@
+ ####################################################################
+ [ CA_default ]
+ 
+-dir		= ./demoCA		# Where everything is kept
++dir		= $ENV::CATOP		# Where everything is kept
+ certs		= $dir/certs		# Where the issued certs are kept
+ crl_dir		= $dir/crl		# Where the issued crl are kept
+ database	= $dir/index.txt	# database index file.
+@@ -78,7 +78,7 @@
+ # A few difference way of specifying how similar the request should look
+ # For type CA, the listed attributes must be the same, and the optional
+ # and supplied fields are just that :-)
+-policy		= policy_match
++policy		= policy_anything
+ 
+ # For the CA policy
+ [ policy_match ]

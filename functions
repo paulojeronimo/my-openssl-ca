@@ -1,0 +1,35 @@
+#!/bin/bash
+
+MY_OPENSSL_CA_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# this variable is used by /usr/lib/ssl/CA.sh
+export CATOP=$MY_OPENSSL_CA_DIR/ca
+
+# this variable is used by openssl
+export OPENSSL_CONF=$MY_OPENSSL_CA_DIR/openssl.cnf
+
+openssl_init() {
+  if ! [ -r "$OPENSSL_CONF" ]
+  then
+    cp /usr/lib/ssl/openssl.cnf $OPENSSL_CONF
+    patch $OPENSSL_CONF < $MY_OPENSSL_CA_DIR/openssl.cnf.patch
+  fi
+}
+
+ca() {
+  case "$1" in
+    backup) 
+      local my_openssl_ca=`basename "$MY_OPENSSL_CA_DIR"`
+      local tar=~/$my_openssl_ca.tar.gz
+
+      set -x
+      pushd "`dirname "$MY_OPENSSL_CA_DIR"`" &> /dev/null
+      tar cfz $tar $my_openssl_ca/
+      popd &> /dev/null
+      set +x
+    ;;
+    *)
+      /usr/lib/ssl/misc/CA.sh "$@"
+    ;;
+  esac
+}

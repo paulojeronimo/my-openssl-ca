@@ -1,0 +1,3 @@
+= Scripts to build and manage my own certificate authority (ca) using openssl
+
+Tested initially on Ubuntu 16.04 (inside an aws ec2 instance built with https://github.com/paulojeronimo/gs-rest-service-aws[this scripts]).
