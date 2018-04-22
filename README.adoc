@@ -1,3 +1,110 @@
 = Scripts to build and manage my own certificate authority (ca) using openssl
+Paulo Jerônimo <paulojeronimo@gmail.com>; {localdatetime}
+:icons: font
+:toc:
+:numbered:
 
-Tested initially on Ubuntu 16.04 (inside an aws ec2 instance built with https://github.com/paulojeronimo/gs-rest-service-aws[this scripts]).
+This projects makes practical the use of the `openssl` scripts to build and manage a certificate authority (CA).
+
+Tested initially on Ubuntu 16.04 (inside an aws ec2 instance built with https://github.com/paulojeronimo/gs-rest-service-aws[this scripts]) and in conjunction with https://github.com/paulojeronimo/gs-rest-service-certificate[gs-rest-service-certificate] project.
+
+== Install
+
+Before use the following commands, install the functions into your `.bashrc` file:
+
+----
+echo "source $PWD/functions" >> ~/.bashrc
+source ~/.bashrc
+----
+
+The following command will call a function (the code is inside the link:functions[] script) that will configure the file `openssl.cnf` like needed.
+
+----
+openssl_init
+----
+
+== Generate
+
+To create a new CA, follow the steps required in the execution of the next command:
+
+----
+ca -newca
+----
+
+After the execution of this command, a directory structure like this will be created:
+
+----
+$ tree ca
+ca
+|-- cacert.pem
+|-- careq.pem
+|-- certs
+|-- crl
+|-- index.txt
+|-- index.txt.attr
+|-- index.txt.old
+|-- newcerts
+|   `-- C145AA910B0C9FE8.pem
+|-- private
+|   `-- cakey.pem
+`-- serial
+
+4 directories, 8 files
+----
+
+== Sign a CSR
+
+The following command takes a CSR file generated in `gs-rest-service-certificate` project and signs the CSR producing a certificate.
+
+----
+openssl ca -in ../gs-rest-service-certificate/generated/gs-rest-service.paulojeronimo.com.csr
+----
+
+This will produce a change inside the directory structure of the CA, like this:
+
+----
+$ tree ca
+ca
+|-- cacert.pem
+|-- careq.pem
+|-- certs
+|-- crl
+|-- index.txt
+|-- index.txt.attr
+|-- index.txt.attr.old
+|-- index.txt.old
+|-- newcerts
+|   |-- C145AA910B0C9FE8.pem
+|   `-- C145AA910B0C9FE9.pem
+|-- private
+|   `-- cakey.pem
+|-- serial
+`-- serial.old
+
+4 directories, 11 files
+----
+
+In this example of execution, the files that needs to be send to the project `gs-rest-service-certificate` are `ca/cacert.pem` and the generated certificate: `ca/newcerts/C145AA910B0C9FE9.pem`. So, the following commands could be executed to complete this task:
+
+----
+d=../gs-rest-service-certificate/received-from-ca
+mkdir -p $d
+cp ca/cacert.pem $d/cacert.pem
+cp ca/newcerts/C145AA910B0C9FE9.pem $d/gs-rest-service.paulojeronimo.com.crt
+----
+
+So after receive these files, the `gs-rest-service-certificate` could import and install the certificate to use it.
+
+== Encrypt
+
+----
+tar cfz ca.tar.gz ca/
+openssl aes-256-cbc -a -salt -in ca.tar.gz -out ca.tar.gz.ascii
+----
+
+== Decrypt
+
+----
+openssl aes-256-cbc -d -a -in ca.tar.gz.ascii -out ca.tar.gz
+tar xfz ca.tar.gz
+----
